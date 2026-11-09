@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DevisBTP Pro</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+:root{
+  --bg:#f0f2f7;--surface:#ffffff;--surface-2:#f8f9fc;
+  --border:#e2e5ed;--border-2:#c8cdd9;
+  --primary:#1a56db;--primary-d:#1448c0;--primary-light:#eff4ff;--primary-mid:#dbeafe;
+  --text:#111827;--t2:#4b5563;--t3:#9ca3af;--t4:#d1d5db;
+  --green:#059669;--green-l:#ecfdf5;
+  --orange:#d97706;--orange-l:#fffbeb;
+  --red:#dc2626;--red-l:#fef2f2;
+  --purple:#7c3aed;--purple-l:#f5f3ff;
+  --shadow-xs:0 1px 2px rgba(0,0,0,.06);
+
+  --shadow-sm:0 1px 3px rgba(0,0,0,.08),0 1px 8px rgba(0,0,0,.04);
+  --shadow:0 4px 12px rgba(0,0,0,.08),0 1px 3px rgba(0,0,0,.05);
+  --shadow-lg:0 12px 40px rgba(0,0,0,.12),0 4px 12px rgba(0,0,0,.06);
+  --r:8px;--r-sm:5px;--r-lg:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+button{cursor:pointer;font-family:inherit;border:none;outline:none;transition:all .15s ease}
+input,select,textarea{font-family:inherit;outline:none;transition:border-color .15s,box-shadow .15s}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:3px}
+
+/* === LAYOUT === */
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:240px;background:var(--text);display:flex;flex-direction:column;flex-shrink:0;height:100vh}
+.content{flex:1;overflow-y:auto;height:100vh}
+
+/* === SIDEBAR === */
+.s-header{padding:22px 20px 16px}
+.s-brand{display:flex;align-items:center;gap:10px}
+.s-icon{width:36px;height:36px;background:var(--primary);border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#fff;letter-spacing:-.5px}
+.s-name{font-size:15px;font-weight:700;color:#fff;letter-spacing:-.3px}
+.s-plan{font-size:11px;color:#6b7280;margin-top:1px}
+.s-divider{height:1px;background:rgba(255,255,255,.08);margin:0 16px}
+.s-nav{padding:12px 10px;flex:1}
+.s-label{font-size:10px;font-weight:600;color:#4b5563;letter-spacing:.08em;text-transform:uppercase;padding:10px 10px 5px}
+.s-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:7px;color:#9ca3af;cursor:pointer;margin-bottom:2px;font-size:13px;font-weight:500;transition:all .15s}
+.s-item:hover{background:rgba(255,255,255,.07);color:#e5e7eb}
+.s-item.active{background:rgba(26,86,219,.25);color:#93c5fd}
+.s-item .si{font-size:15px;width:18px;text-align:center;flex-shrink:0}
+.s-bottom{padding:12px}
+.upgrade-card{background:linear-gradient(135deg,rgba(26,86,219,.4),rgba(124,58,237,.3));border:1px solid rgba(26,86,219,.4);border-radius:10px;padding:14px}
+.upgrade-card-title{font-size:13px;font-weight:600;color:#e0e7ff;margin-bottom:3px}
+.upgrade-card-sub{font-size:11px;color:#818cf8;margin-bottom:10px}
+.upgrade-card-btn{width:100%;background:#fff;color:var(--primary);border-radius:6px;padding:7px;font-size:12px;font-weight:700;border:none;cursor:pointer}
+.upgrade-card-btn:hover{background:#f0f4ff}
+.s-user{display:flex;align-items:center;gap:9px;padding:10px 12px;margin-top:6px}
+.s-avatar{width:30px;height:30px;background:#374151;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#9ca3af;flex-shrink:0}
+.s-user-name{font-size:12px;font-weight:500;color:#9ca3af}
+
+/* === PAGE WRAPPER === */
+.page{display:none;padding:32px 36px;animation:fadeIn .18s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px}
+.page-title{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.4px}
+.page-sub{font-size:13px;color:var(--t2);margin-top:3px}
+
+/* === BUTTONS === */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:var(--r-sm);font-size:13px;font-weight:500;border:1px solid transparent;transition:all .15s;white-space:nowrap}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-d);box-shadow:0 2px 8px rgba(26,86,219,.3)}
+.btn-white{background:var(--surface);color:var(--text);border-color:var(--border);box-shadow:var(--shadow-xs)}
+.btn-white:hover{border-color:var(--border-2);background:var(--surface-2)}
+.btn-ghost{background:transparent;color:var(--t2);padding:7px 10px}
+.btn-ghost:hover{background:var(--surface-2);color:var(--text)}
+.btn-danger-ghost{background:transparent;color:var(--t3);padding:5px 7px;border-radius:4px}
+.btn-danger-ghost:hover{background:var(--red-l);color:var(--red)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-xs{padding:4px 8px;font-size:11px;border-radius:4px}
+.btn-icon{padding:7px;border-radius:var(--r-sm)}
+
+/* === STAT CARDS === */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px 20px;box-shadow:var(--shadow-xs)}
+.stat-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.stat-ico{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.stat-ico.blue{background:var(--primary-mid)}
+.stat-ico.green{background:var(--green-l)}
+.stat-ico.orange{background:var(--orange-l)}
+.stat-ico.purple{background:var(--purple-l)}
+.stat-val{font-size:24px;font-weight:700;letter-spacing:-.5px;color:var(--text)}
+.stat-lbl{font-size:12px;color:var(--t3);margin-top:2px}
+.stat-delta{font-size:11px;font-weight:500;color:var(--green);display:flex;align-items:center;gap:3px}
+
+/* === TABLE === */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-xs);overflow:hidden}
+.card-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+.card-title{font-size:14px;font-weight:600;color:var(--text)}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;padding:11px 16px;text-align:left;background:var(--surface-2);border-bottom:1px solid var(--border)}
+.tbl td{padding:13px 16px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text)}
+.tbl tbody tr:last-child td{border-bottom:none}
+.tbl tbody tr{transition:background .1s;cursor:pointer}
+.tbl tbody tr:hover{background:#fafbff}
+.tbl td.mono{font-family:'SF Mono',monospace;font-size:12px;color:var(--t2)}
+.tbl td.bold{font-weight:600}
+.tbl td.right{text-align:right}
+.tbl td.muted{color:var(--t3)}
+
+/* STATUS */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.badge-draft{background:#f1f5f9;color:#475569}.badge-draft::before{background:#94a3b8}
+.badge-sent{background:var(--primary-light);color:var(--primary)}.badge-sent::before{background:var(--primary)}
+.badge-accepted{background:var(--green-l);color:var(--green)}.badge-accepted::before{background:var(--green)}
+.badge-refused{background:var(--red-l);color:var(--red)}.badge-refused::before{background:var(--red)}
+
+/* === SEARCH BAR === */
+.search-wrap{position:relative}
+.search-wrap input{padding:8px 12px 8px 36px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px;color:var(--text);width:260px}
+.search-wrap input:focus{border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px rgba(26,86,219,.08)}
+.search-wrap .s-ico{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:13px}
+
+/* === CREATION PAGE === */
+.creation-wrap{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start}
+.left-col{display:flex;flex-direction:column;gap:16px}
+.right-col{position:sticky;top:32px;display:flex;flex-direction:column;gap:14px}
+
+.section-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-xs);overflow:hidden}
+.section-card-hd{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.section-card-title{font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px}
+.section-card-title .dot{width:8px;height:8px;border-radius:50%;background:var(--primary)}
+.section-card-body{padding:18px}
+.fg{margin-bottom:13px}
+.fg:last-child{margin-bottom:0}
+.fl{font-size:11px;font-weight:600;color:var(--t2);display:block;margin-bottom:5px;letter-spacing:.01em}
+.fi{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);color:var(--text);font-size:13px}
+.fi:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,86,219,.08)}
+.fi::placeholder{color:var(--t4)}
+select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%239ca3af'%3E%3Cpath d='M6 8l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:16px;padding-right:32px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+/* === LIGNES DEVIS === */
+.lignes-hd{display:grid;grid-template-columns:2fr 72px 80px 96px 68px 88px 54px;gap:0;border-bottom:2px solid var(--border);background:var(--surface-2)}
+.lignes-hd span{padding:9px 10px;font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em}
+.lignes-hd span.r{text-align:right}
+.ligne-row{display:grid;grid-template-columns:2fr 72px 80px 96px 68px 88px 54px;gap:0;border-bottom:1px solid var(--border);align-items:stretch;transition:background .1s;position:relative}
+.ligne-row:hover{background:#fafbff}
+.ligne-row:last-child{border-bottom:none}
+.ligne-row .drag-handle{display:flex;align-items:center;justify-content:center;position:absolute;left:0;top:0;bottom:0;width:18px;cursor:grab;color:var(--t4);font-size:12px;opacity:0;transition:opacity .15s}
+.ligne-row:hover .drag-handle{opacity:1}
+.ligne-cell{position:relative}
+.ligne-cell input,.ligne-cell select{width:100%;height:100%;padding:11px 10px;border:none;background:transparent;font-size:13px;color:var(--text);border-right:1px solid var(--border)}
+.ligne-cell input:focus,.ligne-cell select:focus{background:var(--primary-light);outline:none;z-index:1}
+.ligne-cell.r input,.ligne-cell.r select{text-align:right}
+.ligne-cell:last-child input,.ligne-cell:last-child select{border-right:none}
+.ligne-cell select{appearance:none;cursor:pointer;font-size:12px}
+.ligne-actions{display:flex;align-items:center;justify-content:center;gap:2px;padding:0 5px}
+.total-cell{display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:13px;font-weight:600;color:var(--text);border-left:1px solid var(--border);background:var(--surface-2)}
+.ligne-row.dragging{opacity:.35}
+.ligne-row.drag-over{box-shadow:0 -2px 0 var(--primary)}
+.add-ligne-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid var(--border);background:var(--surface-2)}
+
+/* CATALOGUE PANEL */
+.cat-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-xs)}
+.cat-panel-hd{padding:12px 14px;border-bottom:1px solid var(--border);font-size:12px;font-weight:600;color:var(--text);display:flex;align-items:center;justify-content:space-between}
+.cat-scroll{max-height:260px;overflow-y:auto}
+.cat-section-title{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;padding:9px 12px 5px;background:var(--surface-2);border-bottom:1px solid var(--border)}
+.cat-item{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+.cat-item:hover{background:var(--primary-light)}
+.cat-item:last-child{border-bottom:none}
+.cat-item-name{font-size:12px;font-weight:500;color:var(--text)}
+.cat-item-meta{font-size:11px;color:var(--t3);margin-top:1px}
+.cat-item-pu{font-size:12px;font-weight:600;color:var(--primary);white-space:nowrap;margin-left:8px}
+.cat-add{width:22px;height:22px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-left:6px}
+
+/* TOTAUX */
+.totaux-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-xs)}
+.totaux-row{display:flex;justify-content:space-between;padding:10px 16px;font-size:13px;border-bottom:1px solid var(--border)}
+.totaux-row:last-child{border-bottom:none}
+.totaux-row .lbl{color:var(--t2)}
+.totaux-row .val{font-weight:500}
+.totaux-row.ttc{background:var(--primary);padding:13px 16px}
+.totaux-row.ttc .lbl{color:rgba(255,255,255,.75);font-size:13px;font-weight:600}
+.totaux-row.ttc .val{color:#fff;font-size:17px;font-weight:700}
+
+/* SUMMARY CARD */
+.summary-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;box-shadow:var(--shadow-xs)}
+.summary-ttc{background:var(--primary-light);border-radius:var(--r-sm);padding:12px;text-align:center;margin:12px 0}
+.summary-ttc-val{font-size:24px;font-weight:700;color:var(--primary);letter-spacing:-.5px}
+.summary-ttc-lbl{font-size:11px;color:var(--t2);margin-top:2px}
+.summary-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:12px}
+.summary-row .lbl{color:var(--t3)}
+.summary-row .val{font-weight:500;color:var(--t2)}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(17,24,39,.5);z-index:999;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);width:700px;max-width:94vw;max-height:88vh;display:flex;flex-direction:column;animation:modalIn .2s ease}
+@keyframes modalIn{from{transform:scale(.96) translateY(8px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+.modal-hd{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-title{font-size:16px;font-weight:700}
+.modal-body{overflow-y:auto;flex:1;padding:20px 24px}
+.modal-ft{padding:14px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;flex-shrink:0}
+.close-btn{width:30px;height:30px;border-radius:6px;background:var(--surface-2);border:1px solid var(--border);color:var(--t2);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.close-btn:hover{background:var(--border)}
+
+/* PDF PREVIEW */
+.pdf-doc{background:#fff;font-family:Arial,sans-serif;font-size:11px;color:#1a1a1a;padding:28px 30px;border-radius:var(--r-sm);border:1px solid var(--border)}
+.pdf-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid #1a56db}
+.pdf-logo-wrap{display:flex;align-items:center;gap:10px}
+.pdf-logo-ico{width:44px;height:44px;background:#1a56db;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;flex-shrink:0}
+.pdf-logo-name{font-size:15px;font-weight:700;color:#1a56db}
+.pdf-logo-info{font-size:10px;color:#6b7280;margin-top:2px;line-height:1.6}
+.pdf-ref-box{border:1.5px solid #1a56db;border-radius:5px;padding:10px 14px;text-align:right;min-width:190px}
+.pdf-ref-title{font-size:13px;font-weight:700;color:#1a56db;margin-bottom:5px}
+.pdf-ref-row{font-size:10px;color:#374151;line-height:1.8}
+.pdf-parties{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.pdf-party{font-size:10px;line-height:1.75;color:#374151}
+.pdf-party-title{font-size:9px;font-weight:700;color:#1a56db;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+.pdf-party-ent{border-left:3px solid #1a56db;padding-left:10px}
+.pdf-party-cli{border:1.5px solid #1a56db;border-radius:5px;padding:10px}
+.pdf-objet{background:#eff4ff;border-left:3px solid #1a56db;padding:8px 10px;font-size:10px;color:#374151;margin-bottom:14px;border-radius:0 4px 4px 0}
+.pdf-tbl{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:10px}
+.pdf-tbl thead tr{background:#1a56db}
+.pdf-tbl th{padding:7px 9px;color:#fff;font-weight:600;text-align:left}
+.pdf-tbl th.r,.pdf-tbl td.r{text-align:right}
+.pdf-tbl th.c,.pdf-tbl td.c{text-align:center}
+.pdf-tbl tbody tr.grp td{background:#eff4ff;color:#1a56db;font-weight:700;padding:6px 9px;font-size:10px}
+.pdf-tbl tbody tr.li td{padding:6px 9px;border-bottom:.5px solid #e5e7eb}
+.pdf-tbl tbody tr.li:nth-child(even){background:#f9fafb}
+.pdf-totaux-wrap{display:flex;justify-content:flex-end;margin-bottom:14px}
+.pdf-totaux-inner{border:1.5px solid #1a56db;border-radius:5px;overflow:hidden;min-width:220px}
+.pdf-tot-row{display:flex;justify-content:space-between;padding:5px 12px;font-size:10px;border-bottom:.5px solid #dde5f7;color:#374151}
+.pdf-tot-row.total{background:#1a56db;color:#fff;font-weight:700;font-size:11px;border:none;padding:7px 12px}
+.pdf-cond{font-size:9px;color:#6b7280;line-height:1.7;margin-bottom:12px}
+.pdf-signs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pdf-sign{border:1px solid #d1d5db;border-radius:5px;padding:10px;font-size:9px;color:#374151}
+.pdf-sign-title{font-size:9px;font-weight:700;color:#1a56db;margin-bottom:6px}
+.pdf-sign-line{margin-top:22px;border-top:1px solid #d1d5db;padding-top:4px;color:#9ca3af}
+.pdf-footer{font-size:8px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:7px;margin-top:12px;text-align:center}
+
+/* SETTINGS */
+.settings-section{margin-bottom:22px}
+.settings-section-title{font-size:12px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:14px}
+
+/* UPGRADE MODAL */
+.upgrade-hero{background:linear-gradient(135deg,#1e3a8a 0%,#1a56db 50%,#7c3aed 100%);padding:28px;color:#fff;border-radius:var(--r-lg) var(--r-lg) 0 0;text-align:center}
+.upgrade-hero h2{font-size:22px;font-weight:800;letter-spacing:-.4px;margin-bottom:6px}
+.upgrade-hero p{font-size:13px;opacity:.8}
+.plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:20px}
+.plan{border:2px solid var(--border);border-radius:var(--r-lg);padding:18px;position:relative}
+.plan.featured{border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,86,219,.1)}
+.plan-featured-badge{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--primary);color:#fff;font-size:10px;font-weight:700;padding:2px 10px;border-radius:20px;white-space:nowrap}
+.plan-name{font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.plan-price{font-size:28px;font-weight:800;letter-spacing:-.5px;color:var(--text)}
+.plan-price span{font-size:13px;font-weight:400;color:var(--t3)}
+.plan-features{list-style:none;margin:12px 0;font-size:12px;color:var(--t2)}
+.plan-features li{padding:4px 0;display:flex;align-items:center;gap:7px}
+.plan-features li::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0}
+.plan-features li.no{color:var(--t4)}
+.plan-features li.no::before{content:'✕';color:var(--t4)}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--text);color:#fff;padding:11px 16px;border-radius:var(--r-sm);font-size:13px;font-weight:500;box-shadow:var(--shadow-lg);z-index:9999;transform:translateY(50px);opacity:0;transition:all .25s ease;display:flex;align-items:center;gap:8px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.green{background:var(--green)}
+.toast.red{background:var(--red)}
+
+/* EMPTY */
+.empty{text-align:center;padding:56px 20px;color:var(--t3)}
+.empty-icon{font-size:40px;margin-bottom:12px;opacity:.4}
+.empty-title{font-size:15px;font-weight:600;color:var(--t2);margin-bottom:5px}
+.empty-sub{font-size:13px;margin-bottom:18px}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="s-header">
+    <div class="s-brand">
+      <div class="s-icon">D</div>
+      <div>
+        <div class="s-name">DevisBTP</div>
+        <div class="s-plan">Plan Gratuit · 2/3 devis</div>
+      </div>
+    </div>
+  </div>
+  <div class="s-divider"></div>
+  <div class="s-nav">
+    <div class="s-label">Navigation</div>
+    <div class="s-item active" onclick="nav('dashboard')"><span class="si">▦</span> Tableau de bord</div>
+    <div class="s-item" onclick="nouveauDevis()"><span class="si">＋</span> Nouveau devis</div>
+    <div class="s-label">Compte</div>
+    <div class="s-item" onclick="nav('parametres')"><span class="si">⚙</span> Paramètres</div>
+    <div class="s-item" onclick="openModal('modal-upgrade')"><span class="si">⚡</span> Passer Pro</div>
+  </div>
+  <div class="s-bottom">
+    <div class="upgrade-card">
+      <div class="upgrade-card-title">Passez à Pro</div>
+      <div class="upgrade-card-sub">Devis illimités, PDF premium</div>
+      <button class="upgrade-card-btn" onclick="openModal('modal-upgrade')">Voir les offres →</button>
+    </div>
+    <div class="s-user">
+      <div class="s-avatar">MD</div>
+      <div class="s-user-name">Maçonnerie Dupont</div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+<!-- PAGE DASHBOARD -->
+<div class="page active" id="page-dashboard">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Tableau de bord</div>
+      <div class="page-sub">Gérez et suivez tous vos devis</div>
+    </div>
+    <button class="btn btn-primary" onclick="nouveauDevis()">+ Nouveau devis</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-top"><div class="stat-ico blue">📄</div><span class="stat-delta">+2 ce mois</span></div>
+      <div class="stat-val" id="st-total">2</div>
+      <div class="stat-lbl">Devis créés</div>
+    </div>
+    <div class="stat">
+      <div class="stat-top"><div class="stat-ico green">💶</div><span class="stat-delta">+18%</span></div>
+      <div class="stat-val" id="st-ca">—</div>
+      <div class="stat-lbl">CA estimé HT</div>
+    </div>
+    <div class="stat">
+      <div class="stat-top"><div class="stat-ico orange">⏳</div></div>
+      <div class="stat-val" id="st-pending">1</div>
+      <div class="stat-lbl">En attente</div>
+    </div>
+    <div class="stat">
+      <div class="stat-top"><div class="stat-ico purple">✅</div><span class="stat-delta">→ 50%</span></div>
+      <div class="stat-val" id="st-accepted">1</div>
+      <div class="stat-lbl">Acceptés</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd">
+      <div class="card-title">Devis récents</div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <div class="search-wrap"><span class="s-ico">🔍</span><input placeholder="Client, chantier, numéro…" oninput="filterList()" id="q"></div>
+        <select class="fi" style="width:140px;padding:8px 30px 8px 10px" onchange="filterList()" id="filter-st">
+          <option value="">Tous les statuts</option>
+          <option value="draft">Brouillon</option>
+          <option value="sent">Envoyé</option>
+          <option value="accepted">Accepté</option>
+        </select>
+      </div>
+    </div>
+    <table class="tbl">
+      <thead><tr>
+        <th>N° Devis</th><th>Client</th><th>Chantier</th><th>Date</th><th>HT</th><th>TTC</th><th>Statut</th><th></th>
+      </tr></thead>
+      <tbody id="tbody-devis"></tbody>
+    </table>
+    <div id="empty-state" style="display:none" class="empty">
+      <div class="empty-icon">📄</div>
+      <div class="empty-title">Aucun devis trouvé</div>
+      <div class="empty-sub">Créez votre premier devis en 2 minutes</div>
+      <button class="btn btn-primary" onclick="nouveauDevis()">+ Créer un devis</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE CRÉATION -->
+<div class="page" id="page-creation">
+  <div class="page-header">
+    <div>
+      <div class="page-title" id="creation-title">Nouveau devis</div>
+      <div class="page-sub" id="creation-num">N° DEV-2024-003 · Brouillon</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-white btn-sm" onclick="nav('dashboard')">← Retour</button>
+      <button class="btn btn-white btn-sm" onclick="openApercu()">👁 Aperçu PDF</button>
+      <button class="btn btn-primary btn-sm" onclick="sauvegarder()">💾 Enregistrer</button>
+    </div>
+  </div>
+
+  <div class="creation-wrap">
+    <!-- LEFT -->
+    <div class="left-col">
+
+      <!-- CLIENT -->
+      <div class="section-card">
+        <div class="section-card-hd">
+          <div class="section-card-title"><span class="dot"></span>Informations client</div>
+        </div>
+        <div class="section-card-body">
+          <div class="g2">
+            <div class="fg"><label class="fl">Nom / Prénom *</label><input class="fi" id="c-nom" placeholder="M. Dupont"></div>
+            <div class="fg"><label class="fl">Société</label><input class="fi" id="c-soc" placeholder="Dupont SARL"></div>
+            <div class="fg"><label class="fl">Téléphone</label><input class="fi" id="c-tel" placeholder="06 00 00 00 00"></div>
+            <div class="fg"><label class="fl">Email</label><input class="fi" id="c-email" placeholder="contact@client.fr"></div>
+          </div>
+          <div class="fg"><label class="fl">Adresse</label><input class="fi" id="c-adr" placeholder="15 rue des Oliviers, 83310 Cogolin"></div>
+        </div>
+      </div>
+
+      <!-- CHANTIER -->
+      <div class="section-card">
+        <div class="section-card-hd">
+          <div class="section-card-title"><span class="dot"></span>Chantier</div>
+        </div>
+        <div class="section-card-body">
+          <div class="g3">
+            <div class="fg" style="grid-column:span 2"><label class="fl">Nom du chantier *</label><input class="fi" id="ch-nom" placeholder="Villa Les Pins – Clôture"></div>
+            <div class="fg"><label class="fl">Date</label><input class="fi" type="date" id="ch-date"></div>
+          </div>
+          <div class="fg"><label class="fl">Adresse chantier</label><input class="fi" id="ch-adr" placeholder="12 chemin des Pins, 83350 Ramatuelle"></div>
+          <div class="fg" style="margin-bottom:0"><label class="fl">Description / Objet des travaux</label><textarea class="fi" id="ch-desc" rows="2" placeholder="Ex : Construction mur de clôture parpaing 20cm, 15 ml, fondations béton comprises"></textarea></div>
+        </div>
+      </div>
+
+      <!-- PRESTATIONS -->
+      <div class="section-card">
+        <div class="section-card-hd">
+          <div class="section-card-title"><span class="dot"></span>Prestations</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-white btn-sm" onclick="openModal('modal-catalogue')">📚 Catalogue</button>
+            <button class="btn btn-primary btn-sm" onclick="ajouterLigne()">+ Ligne</button>
+          </div>
+        </div>
+
+        <!-- TABLE HEADER -->
+        <div class="lignes-hd">
+          <span>Désignation</span>
+          <span class="r">Qté</span>
+          <span>Unité</span>
+          <span class="r">PU HT €</span>
+          <span class="r">TVA</span>
+          <span class="r">Total HT</span>
+          <span></span>
+        </div>
+
+        <!-- LIGNES -->
+        <div id="lignes-body"></div>
+
+        <!-- ADD BAR -->
+        <div class="add-ligne-bar">
+          <button class="btn btn-ghost btn-sm" onclick="ajouterLigne()">+ Ajouter une ligne</button>
+          <button class="btn btn-ghost btn-sm" onclick="openModal('modal-catalogue')">+ Depuis le catalogue</button>
+        </div>
+      </div>
+
+      <!-- CONDITIONS -->
+      <div class="section-card">
+        <div class="section-card-hd"><div class="section-card-title"><span class="dot"></span>Conditions de règlement</div></div>
+        <div class="section-card-body">
+          <div class="g2">
+            <div class="fg"><label class="fl">Conditions</label><textarea class="fi" id="d-cond" rows="2">30% à la commande — Solde à la livraison</textarea></div>
+            <div>
+              <div class="fg"><label class="fl">Validité</label><select class="fi" id="d-valid"><option>1 mois</option><option selected>2 mois</option><option>3 mois</option></select></div>
+              <div class="fg"><label class="fl">Code client</label><input class="fi" id="d-cli" placeholder="CLI-001"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right-col">
+      <div class="summary-card">
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px">Résumé</div>
+        <div class="summary-row"><span class="lbl">Client</span><span class="val" id="r-client">—</span></div>
+        <div class="summary-row"><span class="lbl">Chantier</span><span class="val" id="r-chantier">—</span></div>
+        <div class="summary-row"><span class="lbl">Lignes</span><span class="val" id="r-lignes">0</span></div>
+        <div class="summary-ttc">
+          <div class="summary-ttc-val" id="r-ttc">0,00 €</div>
+          <div class="summary-ttc-lbl">Total TTC</div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="openApercu()">👁 Aperçu & PDF</button>
+        <button class="btn btn-white" style="width:100%;justify-content:center;margin-top:8px" onclick="sauvegarder()">💾 Enregistrer</button>
+      </div>
+
+      <div class="totaux-card">
+        <div class="totaux-row"><span class="lbl">Sous-total HT</span><span class="val" id="t-ht">0,00 €</span></div>
+        <div id="tva-detail"></div>
+        <div class="totaux-row"><span class="lbl">Total TVA</span><span class="val" id="t-tva">0,00 €</span></div>
+        <div class="totaux-row ttc"><span class="lbl">Total TTC</span><span class="val" id="t-ttc">0,00 €</span></div>
+      </div>
+
+      <div class="cat-panel">
+        <div class="cat-panel-hd"><span>⚡ Catalogue rapide</span><button class="btn btn-ghost btn-xs" onclick="openModal('modal-catalogue')">Tout voir</button></div>
+        <div class="cat-scroll" id="quick-cat"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE PARAMÈTRES -->
+<div class="page" id="page-parametres">
+  <div class="page-header">
+    <div><div class="page-title">Paramètres</div><div class="page-sub">Informations de votre entreprise</div></div>
+    <button class="btn btn-primary" onclick="saveSettings()">Enregistrer</button>
+  </div>
+  <div style="max-width:620px;display:flex;flex-direction:column;gap:16px">
+    <div class="section-card">
+      <div class="section-card-hd"><div class="section-card-title"><span class="dot"></span>Entreprise</div></div>
+      <div class="section-card-body">
+        <div class="g2">
+          <div class="fg"><label class="fl">Raison sociale</label><input class="fi" id="s-nom" value="Maçonnerie Dupont"></div>
+          <div class="fg"><label class="fl">Initiales logo (2-3 car.)</label><input class="fi" id="s-logo" value="MD" maxlength="3"></div>
+          <div class="fg"><label class="fl">Téléphone</label><input class="fi" id="s-tel" value="04.94.00.00.00"></div>
+          <div class="fg"><label class="fl">Email</label><input class="fi" id="s-email" value="contact@maconnerie-dupont.fr"></div>
+        </div>
+        <div class="fg"><label class="fl">Adresse</label><input class="fi" id="s-adr" value="12 rue des Artisans, 83990 Saint-Tropez"></div>
+        <div class="g2">
+          <div class="fg"><label class="fl">SIRET</label><input class="fi" id="s-siret" value="000 000 000 00000"></div>
+          <div class="fg"><label class="fl">N° TVA intracommunautaire</label><input class="fi" id="s-tva-num" value="FR 00 000000000"></div>
+        </div>
+        <div class="fg"><label class="fl">Forme juridique</label><input class="fi" id="s-forme" value="SARL au capital de 10 000€"></div>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-card-hd"><div class="section-card-title"><span class="dot"></span>Préférences devis</div></div>
+      <div class="section-card-body">
+        <div class="g2">
+          <div class="fg"><label class="fl">TVA par défaut</label><select class="fi" id="s-tva-def"><option value="10" selected>10%</option><option value="20">20%</option><option value="5.5">5,5%</option></select></div>
+          <div class="fg"><label class="fl">Préfixe numérotation</label><input class="fi" id="s-prefix" value="DEV-2024-"></div>
+        </div>
+        <div class="fg"><label class="fl">Conditions générales par défaut</label><textarea class="fi" id="s-cg" rows="2">30% à la commande, solde à la livraison.</textarea></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /content -->
+</div><!-- /app -->
+
+<!-- MODALS -->
+
+<!-- CATALOGUE -->
+<div class="overlay" id="modal-catalogue">
+  <div class="modal" style="width:660px">
+    <div class="modal-hd">
+      <div class="modal-title">📚 Bibliothèque de prestations</div>
+      <div class="close-btn" onclick="closeModal('modal-catalogue')">✕</div>
+    </div>
+    <div class="modal-body" style="padding:0" id="cat-body"></div>
+    <div class="modal-ft"><button class="btn btn-white" onclick="closeModal('modal-catalogue')">Fermer</button></div>
+  </div>
+</div>
+
+<!-- APERÇU PDF -->
+<div class="overlay" id="modal-apercu">
+  <div class="modal" style="width:780px">
+    <div class="modal-hd">
+      <div class="modal-title">Aperçu du devis</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-primary btn-sm" onclick="imprimerPDF()">⬇ Télécharger PDF</button>
+        <div class="close-btn" onclick="closeModal('modal-apercu')">✕</div>
+      </div>
+    </div>
+    <div class="modal-body" id="apercu-body"></div>
+  </div>
+</div>
+
+<!-- UPGRADE -->
+<div class="overlay" id="modal-upgrade">
+  <div class="modal" style="width:520px;padding:0;overflow:hidden">
+    <div class="upgrade-hero">
+      <div style="font-size:28px;margin-bottom:8px">⚡</div>
+      <h2>Passez à DevisBTP Pro</h2>
+      <p>Créez des devis illimités, exportez des PDFs premium et bien plus</p>
+    </div>
+    <div class="plan-grid">
+      <div class="plan">
+        <div class="plan-name">Gratuit</div>
+        <div class="plan-price">0€ <span>/ mois</span></div>
+        <ul class="plan-features">
+          <li>3 devis maximum</li>
+          <li>Export PDF basique</li>
+          <li>Catalogue limité</li>
+          <li class="no">Logo personnalisé</li>
+          <li class="no">Support prioritaire</li>
+        </ul>
+        <button class="btn btn-white" style="width:100%;justify-content:center">Plan actuel</button>
+      </div>
+      <div class="plan featured">
+        <div class="plan-featured-badge">⭐ Recommandé</div>
+        <div class="plan-name">Pro</div>
+        <div class="plan-price">29€ <span>/ mois</span></div>
+        <ul class="plan-features">
+          <li>Devis illimités</li>
+          <li>PDF premium & logo</li>
+          <li>Bibliothèque complète</li>
+          <li>Signature électronique</li>
+          <li>Support prioritaire</li>
+        </ul>
+        <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="closeModal('modal-upgrade');toast('Redirection paiement…','green')">Essai gratuit 14 jours</button>
+      </div>
+    </div>
+    <div style="text-align:center;padding:0 20px 18px;font-size:11px;color:var(--t3)">Sans engagement · Résiliable à tout moment</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════
+const CAT = [
+  {cat:"Terrassement",items:[
+    {n:"Décapage terre végétale",u:"m²",pu:8},{n:"Terrassement en fouille",u:"m³",pu:45},
+    {n:"Remblai et compactage",u:"m³",pu:28},{n:"Évacuation de gravats",u:"m³",pu:35},
+  ]},
+  {cat:"Fondations",items:[
+    {n:"Semelles filantes béton",u:"ml",pu:95},{n:"Semelles isolées",u:"u",pu:180},
+    {n:"Dalle béton armé e=15cm",u:"m²",pu:65},{n:"Chape ciment e=5cm",u:"m²",pu:28},
+  ]},
+  {cat:"Maçonnerie",items:[
+    {n:"Mur parpaing 20cm",u:"m²",pu:55},{n:"Mur parpaing 15cm",u:"m²",pu:48},
+    {n:"Mur en brique",u:"m²",pu:72},{n:"Enduit ciment extérieur",u:"m²",pu:32},
+    {n:"Enduit ciment intérieur",u:"m²",pu:24},{n:"Coffrage bois",u:"m²",pu:42},
+  ]},
+  {cat:"Béton / Structure",items:[
+    {n:"Béton banché e=20cm",u:"m²",pu:88},{n:"Béton coulé en place",u:"m³",pu:145},
+    {n:"Ferraillage acier HA",u:"kg",pu:2.8},{n:"Poutre béton armé",u:"ml",pu:120},
+  ]},
+  {cat:"Divers & Forfaits",items:[
+    {n:"Installation chantier",u:"forfait",pu:650},{n:"Nettoyage fin de chantier",u:"forfait",pu:350},
+    {n:"Fourniture et pose regard",u:"u",pu:180},
+  ]},
+];
+
+let devisDB = [
+  {id:'DEV-2024-001',client:'M. et Mme Martin',chantier:'Rénovation façade villa',date:'12/04/2024',ht:3835,ttc:4218.5,status:'accepted',lignes:[]},
+  {id:'DEV-2024-002',client:'SCI Les Palmiers',chantier:'Piscine & dallage extérieur',date:'28/04/2024',ht:11500,ttc:12650,status:'sent',lignes:[]},
+];
+let lignes = [];
+let editId = null;
+let S = {nom:'Maçonnerie Dupont',logo:'MD',tel:'04.94.00.00.00',email:'contact@maconnerie-dupont.fr',adr:'12 rue des Artisans, 83990 Saint-Tropez',siret:'000 000 000 00000',tvanum:'FR 00 000000000',forme:'SARL au capital de 10 000€'};
+
+// ══════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════
+function nav(p){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.querySelectorAll('.s-item').forEach((x,i)=>{
+    x.classList.toggle('active',['dashboard','','parametres',''][i]===p||(i===1&&p==='creation'));
+  });
+  if(p==='dashboard') renderDB();
+}
+
+// ══════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════
+function renderDB(){
+  const q=(document.getElementById('q')?.value||'').toLowerCase();
+  const sf=document.getElementById('filter-st')?.value||'';
+  const filtered=devisDB.filter(d=>{
+    const ms=!q||[d.id,d.client,d.chantier].some(x=>x.toLowerCase().includes(q));
+    const mf=!sf||d.status===sf;
+    return ms&&mf;
+  });
+  const tb=document.getElementById('tbody-devis');
+  const em=document.getElementById('empty-state');
+  if(!filtered.length){tb.innerHTML='';em.style.display='block';return;}
+  em.style.display='none';
+  tb.innerHTML=filtered.map(d=>`
+    <tr onclick="editDevis('${d.id}')">
+      <td class="mono">${d.id}</td>
+      <td class="bold">${d.client}</td>
+      <td>${d.chantier}</td>
+      <td class="muted">${d.date}</td>
+      <td class="right">${fmt(d.ht)}</td>
+      <td class="right bold">${fmt(d.ttc)}</td>
+      <td><span class="badge badge-${d.status}">${{draft:'Brouillon',sent:'Envoyé',accepted:'Accepté',refused:'Refusé'}[d.status]}</span></td>
+      <td onclick="event.stopPropagation()">
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-ghost btn-xs" title="Dupliquer" onclick="dupDevis('${d.id}')">⧉</button>
+          <button class="btn btn-danger-ghost btn-xs" title="Supprimer" onclick="delDevis('${d.id}')">✕</button>
+        </div>
+      </td>
+    </tr>`).join('');
+  const acc=devisDB.filter(d=>d.status==='accepted');
+  document.getElementById('st-total').textContent=devisDB.length;
+  document.getElementById('st-ca').textContent=acc.length?fmt(acc.reduce((s,d)=>s+d.ht,0)):0;
+  document.getElementById('st-pending').textContent=devisDB.filter(d=>d.status==='sent').length;
+  document.getElementById('st-accepted').textContent=acc.length;
+}
+function filterList(){renderDB();}
+function dupDevis(id){
+  const d=devisDB.find(x=>x.id===id);if(!d)return;
+  const n=String(devisDB.length+1).padStart(3,'0');
+  devisDB.unshift({...JSON.parse(JSON.stringify(d)),id:`DEV-2024-${n}`,status:'draft',date:new Date().toLocaleDateString('fr-FR')});
+  renderDB();toast('Devis dupliqué ✓','green');
+}
+function delDevis(id){
+  devisDB=devisDB.filter(x=>x.id!==id);renderDB();toast('Devis supprimé');
+}
+
+// ══════════════════════════════════════════
+// CRÉATION
+// ══════════════════════════════════════════
+function nouveauDevis(){
+  editId=null;lignes=[];
+  nav('creation');
+  const n=String(devisDB.length+1).padStart(3,'0');
+  document.getElementById('creation-title').textContent='Nouveau devis';
+  document.getElementById('creation-num').textContent=`N° DEV-2024-${n} · Brouillon`;
+  document.getElementById('ch-date').value=new Date().toISOString().split('T')[0];
+  ['c-nom','c-soc','c-tel','c-email','c-adr','ch-nom','ch-adr','ch-desc','d-cli'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value='';
+  });
+  renderLignes();renderQuickCat();bindSummary();
+}
+function editDevis(id){
+  const d=devisDB.find(x=>x.id===id);if(!d)return;
+  editId=id;lignes=JSON.parse(JSON.stringify(d.lignes||[]));
+  nav('creation');
+  document.getElementById('creation-title').textContent=`Modifier ${d.id}`;
+  document.getElementById('creation-num').textContent=`${d.id} · ${d.status==='accepted'?'Accepté':d.status==='sent'?'Envoyé':'Brouillon'}`;
+  setTimeout(()=>{
+    document.getElementById('c-nom').value=d.client||'';
+    document.getElementById('ch-nom').value=d.chantier||'';
+    document.getElementById('ch-date').value=new Date().toISOString().split('T')[0];
+  },30);
+  renderLignes();renderQuickCat();bindSummary();
+}
+function bindSummary(){
+  ['c-nom','ch-nom'].forEach(id=>document.getElementById(id)?.addEventListener('input',updateSummary));
+  updateSummary();
+}
+function updateSummary(){
+  document.getElementById('r-client').textContent=g('c-nom')||'—';
+  document.getElementById('r-chantier').textContent=g('ch-nom')||'—';
+  document.getElementById('r-lignes').textContent=lignes.length;
+}
+
+// ─── LIGNES ───────────────────────────────
+function ajouterLigne(preset=null){
+  lignes.push(preset||{n:'',u:'m²',q:1,pu:0,tva:10});
+  renderLignes();
+  setTimeout(()=>{
+    const inputs=document.querySelectorAll('#lignes-body .ln-name');
+    if(inputs.length)inputs[inputs.length-1].focus();
+  },30);
+}
+function addFromCat(n,u,pu){
+  ajouterLigne({n,u,q:1,pu,tva:10});
+  closeModal('modal-catalogue');
+  toast(`"${n}" ajouté ✓`,'green');
+}
+function delLigne(i){lignes.splice(i,1);renderLignes();}
+function dupLigne(i){lignes.splice(i+1,0,{...lignes[i]});renderLignes();toast('Ligne dupliquée');}
+function majLigne(i,k,v){
+  if(['q','pu','tva'].includes(k))v=parseFloat(v)||0;
+  lignes[i][k]=v;recalc();
+}
+
+function renderLignes(){
+  const b=document.getElementById('lignes-body');
+  if(!lignes.length){
+    b.innerHTML=`<div style="text-align:center;padding:28px 20px;color:var(--t3);font-size:13px">
+      Aucune prestation. <span style="color:var(--primary);cursor:pointer;font-weight:500" onclick="ajouterLigne()">+ Ajouter une ligne</span> ou <span style="color:var(--primary);cursor:pointer;font-weight:500" onclick="openModal('modal-catalogue')">choisir dans le catalogue</span>.
+    </div>`;
+    recalc();return;
+  }
+  b.innerHTML=lignes.map((l,i)=>`
+    <div class="ligne-row" id="lr${i}" draggable="true" ondragstart="dgs(${i})" ondragover="dgo(event,${i})" ondrop="dgd(${i})">
+      <div class="drag-handle" title="Déplacer">⠿</div>
+      <div class="ligne-cell" style="padding-left:18px">
+        <input class="ln-name" value="${esc(l.n)}" placeholder="Désignation…" onchange="majLigne(${i},'n',this.value)" onkeydown="kd(event,${i})">
+      </div>
+      <div class="ligne-cell r"><input type="number" value="${l.q}" min="0" step="0.01" style="text-align:right" oninput="majLigne(${i},'q',this.value)"></div>
+      <div class="ligne-cell">
+        <select onchange="majLigne(${i},'u',this.value)">
+          ${['m²','ml','mL','m³','kg','h','u','forfait'].map(u=>`<option${u===l.u?' selected':''}>${u}</option>`).join('')}
+        </select>
+      </div>
+      <div class="ligne-cell r"><input type="number" value="${l.pu}" min="0" step="0.01" style="text-align:right" oninput="majLigne(${i},'pu',this.value)"></div>
+      <div class="ligne-cell r">
+        <select style="text-align:right" onchange="majLigne(${i},'tva',this.value)">
+          ${[0,5.5,10,20].map(t=>`<option value="${t}"${t===l.tva?' selected':''}>${t}%</option>`).join('')}
+        </select>
+      </div>
+      <div class="total-cell" id="tc${i}">${fmt((l.q||0)*(l.pu||0))}</div>
+      <div class="ligne-actions">
+        <button class="btn btn-ghost btn-icon" title="Dupliquer" onclick="dupLigne(${i})" style="font-size:12px">⧉</button>
+        <button class="btn-danger-ghost" title="Supprimer" onclick="delLigne(${i})">✕</button>
+      </div>
+    </div>`).join('');
+  recalc();updateSummary();
+}
+
+function recalc(){
+  let ht=0;const tm={};
+  lignes.forEach((l,i)=>{
+    const lh=(l.q||0)*(l.pu||0);ht+=lh;
+    const t=l.tva||0;tm[t]=(tm[t]||0)+lh*t/100;
+    const tc=document.getElementById('tc'+i);
+    if(tc)tc.textContent=fmt(lh);
+  });
+  const ttva=Object.values(tm).reduce((a,b)=>a+b,0);
+  const ttc=ht+ttva;
+  el('t-ht').textContent=fmt(ht);
+  el('t-tva').textContent=fmt(ttva);
+  el('t-ttc').textContent=fmt(ttc);
+  el('r-ttc').textContent=fmt(ttc);
+  el('tva-detail').innerHTML=Object.entries(tm).filter(([,v])=>v>0).map(([t,v])=>`
+    <div class="totaux-row"><span class="lbl">TVA ${t}%</span><span class="val">${fmt(v)}</span></div>`).join('');
+}
+
+function kd(e,i){if(e.key==='Enter'){e.preventDefault();ajouterLigne();}}
+
+// DRAG
+let dgi=null;
+function dgs(i){dgi=i;}
+function dgo(e,i){e.preventDefault();document.querySelectorAll('.ligne-row').forEach((r,ri)=>r.classList.toggle('drag-over',ri===i&&i!==dgi));}
+function dgd(i){
+  if(dgi===null||dgi===i)return;
+  const[item]=lignes.splice(dgi,1);lignes.splice(i,0,item);dgi=null;
+  document.querySelectorAll('.ligne-row').forEach(r=>r.classList.remove('drag-over'));
+  renderLignes();
+}
+
+// ─── CATALOGUE ────────────────────────────
+function renderCatalogue(){
+  document.getElementById('cat-body').innerHTML=CAT.map(cat=>`
+    <div class="cat-section-title">${cat.cat}</div>
+    ${cat.items.map(item=>`
+      <div class="cat-item" onclick="addFromCat('${esc(item.n)}','${item.u}',${item.pu})">
+        <div>
+          <div class="cat-item-name">${item.n}</div>
+          <div class="cat-item-meta">${item.u} · TVA 10%</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          <span class="cat-item-pu">${item.pu.toLocaleString('fr-FR')} €</span>
+          <div class="cat-add">+</div>
+        </div>
+      </div>`).join('')}`).join('');
+}
+function renderQuickCat(){
+  const qc=document.getElementById('quick-cat');
+  const all=CAT.flatMap(c=>c.items).slice(0,8);
+  qc.innerHTML=all.map(item=>`
+    <div class="cat-item" onclick="addFromCat('${esc(item.n)}','${item.u}',${item.pu})">
+      <div><div class="cat-item-name">${item.n}</div><div class="cat-item-meta">${item.pu} € / ${item.u}</div></div>
+      <div class="cat-add">+</div>
+    </div>`).join('');
+}
+
+// ─── SAVE ─────────────────────────────────
+function sauvegarder(){
+  const nom=g('c-nom'),chan=g('ch-nom');
+  if(!nom){toast('Nom du client requis','red');return;}
+  if(!chan){toast('Nom du chantier requis','red');return;}
+  let ht=0;const tm={};
+  lignes.forEach(l=>{const lh=(l.q||0)*(l.pu||0);ht+=lh;const t=l.tva||0;tm[t]=(tm[t]||0)+lh*t/100;});
+  const ttc=ht+Object.values(tm).reduce((a,b)=>a+b,0);
+  const n=editId||`DEV-2024-${String(devisDB.length+1).padStart(3,'0')}`;
+  const d={id:n,client:nom,chantier:chan,date:new Date().toLocaleDateString('fr-FR'),ht,ttc,status:'draft',lignes:JSON.parse(JSON.stringify(lignes))};
+  if(editId){const idx=devisDB.findIndex(x=>x.id===editId);if(idx>-1)devisDB[idx]=d;}
+  else{
+    if(devisDB.length>=3){openModal('modal-upgrade');return;}
+    devisDB.unshift(d);
+  }
+  editId=n;
+  toast(`Devis ${n} enregistré ✓`,'green');
+  setTimeout(()=>nav('dashboard'),900);
+}
+
+// ─── PDF ──────────────────────────────────
+function genPDF(){
+  const nom=g('c-nom')||'—',soc=g('c-soc')||'',tel=g('c-tel')||'',email=g('c-email')||'',adr=g('c-adr')||'';
+  const chan=g('ch-nom')||'—',chadr=g('ch-adr')||'',chdesc=g('ch-desc')||'';
+  const cond=g('d-cond')||'',valid=g('d-valid')||'2 mois',cli=g('d-cli')||'—';
+  const dateVal=g('ch-date');
+  const ds=dateVal?new Date(dateVal).toLocaleDateString('fr-FR'):new Date().toLocaleDateString('fr-FR');
+  const num=editId||`DEV-2024-${String(devisDB.length+1).padStart(3,'0')}`;
+  let ht=0;const tm={};
+  lignes.forEach(l=>{const lh=(l.q||0)*(l.pu||0);ht+=lh;const t=l.tva||0;tm[t]=(tm[t]||0)+lh*t/100;});
+  const ttva=Object.values(tm).reduce((a,b)=>a+b,0);
+  const ttc=ht+ttva;
+  const lHTML=lignes.map(l=>`<tr class="li"><td>${l.n||'—'}</td><td class="c">${l.u}</td><td class="c">${(l.q||0).toLocaleString('fr-FR')}</td><td class="r">${(l.pu||0).toFixed(2)} €</td><td class="r">${fmt((l.q||0)*(l.pu||0))}</td></tr>`).join('')||'<tr class="li"><td colspan="5" style="text-align:center;color:#9ca3af">Aucune prestation</td></tr>';
+  const tvaRows=Object.entries(tm).filter(([,v])=>v>0).map(([t,v])=>`<div class="pdf-tot-row"><span>TVA ${t}%</span><span>${fmt(v)}</span></div>`).join('');
+  const condLines=(cond||'').split('\n').filter(Boolean).map(l=>`• ${l}`).join('<br>');
+  return`<div class="pdf-doc" id="pdf-inner">
+    <div class="pdf-hdr">
+      <div class="pdf-logo-wrap">
+        <div class="pdf-logo-ico">${S.logo}</div>
+        <div><div class="pdf-logo-name">${S.nom}</div><div class="pdf-logo-info">${S.adr}<br>Tél : ${S.tel} · ${S.email}</div></div>
+      </div>
+      <div class="pdf-ref-box">
+        <div class="pdf-ref-title">DEVIS N° ${num}</div>
+        <div class="pdf-ref-row">Date : ${ds}<br>Code client : ${cli}<br>Valable : ${valid}</div>
+      </div>
+    </div>
+    <div class="pdf-parties">
+      <div class="pdf-party pdf-party-ent"><div class="pdf-party-title">L'entreprise</div><strong>${S.nom}</strong><br>${S.adr}<br>Tél : ${S.tel}<br>${S.email}</div>
+      <div class="pdf-party pdf-party-cli"><div class="pdf-party-title">Le client</div><strong>${nom}</strong>${soc?`<br>${soc}`:''}<br>${adr}${tel?`<br>${tel}`:''}${email?`<br>${email}`:''}</div>
+    </div>
+    ${chdesc?`<div class="pdf-objet"><strong>Objet :</strong> ${chdesc}</div>`:''}
+    <table class="pdf-tbl">
+      <thead><tr><th>Désignation</th><th class="c">Unité</th><th class="c">Quantité</th><th class="r">PU HT</th><th class="r">Total HT</th></tr></thead>
+      <tbody>${lHTML}</tbody>
+    </table>
+    <div class="pdf-totaux-wrap">
+      <div class="pdf-totaux-inner">
+        <div class="pdf-tot-row"><span>Total HT</span><span>${fmt(ht)}</span></div>
+        ${tvaRows}
+        <div class="pdf-tot-row"><span>Total TVA</span><span>${fmt(ttva)}</span></div>
+        <div class="pdf-tot-row total"><span>TOTAL TTC</span><span>${fmt(ttc)}</span></div>
+      </div>
+    </div>
+    <div class="pdf-cond"><strong>Conditions de règlement :</strong><br>${condLines}<br><br>Merci de retourner ce devis signé avec la mention « Bon pour accord et commande ».</div>
+    <div class="pdf-signs">
+      <div class="pdf-sign"><div class="pdf-sign-title">Pour l'entreprise – ${S.nom}</div><div style="color:#1a56db;font-weight:600;font-size:10px">${S.nom}</div><div class="pdf-sign-line">Signature</div></div>
+      <div class="pdf-sign"><div class="pdf-sign-title">Pour le client – À .............. le ${ds}</div><div style="color:#1a56db;font-style:italic;font-size:9px;margin-top:4px">Bon pour accord et commande</div><strong style="font-size:10px">${nom}</strong><div class="pdf-sign-line">Signature</div></div>
+    </div>
+    <div class="pdf-footer">${S.forme} · SIRET ${S.siret} · N° TVA ${S.tvanum}</div>
+  </div>`;
+}
+function openApercu(){document.getElementById('apercu-body').innerHTML=genPDF();openModal('modal-apercu');}
+function imprimerPDF(){
+  const doc=document.getElementById('pdf-inner');
+  if(!doc){toast('Ouvrez d\'abord l\'aperçu','red');return;}
+  const num=editId||`DEV-2024-${String(devisDB.length+1).padStart(3,'0')}`;
+  const btn=document.querySelector('#modal-apercu .btn-primary');
+  if(btn){btn.textContent='⏳ Génération…';btn.disabled=true;}
+  const opt={
+    margin:[10,10,10,10],
+    filename:`Devis-${num}.pdf`,
+    image:{type:'jpeg',quality:0.98},
+    html2canvas:{scale:2,useCORS:true,logging:false},
+    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
+  };
+  html2pdf().set(opt).from(doc).save().then(()=>{
+    if(btn){btn.textContent='⬇ Télécharger PDF';btn.disabled=false;}
+    toast(`Devis ${num}.pdf téléchargé ✓`,'green');
+  }).catch(()=>{
+    if(btn){btn.textContent='⬇ Télécharger PDF';btn.disabled=false;}
+    toast('Erreur génération PDF','red');
+  });
+}
+
+// ─── SETTINGS ─────────────────────────────
+function saveSettings(){
+  S={nom:g('s-nom'),logo:g('s-logo'),tel:g('s-tel'),email:g('s-email'),adr:g('s-adr'),siret:g('s-siret'),tvanum:g('s-tva-num'),forme:g('s-forme')};
+  toast('Paramètres enregistrés ✓','green');
+}
+
+// ─── MODAL ────────────────────────────────
+function openModal(id){
+  document.getElementById(id).classList.add('open');
+  if(id==='modal-catalogue')renderCatalogue();
+}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+
+// ─── TOAST ────────────────────────────────
+function toast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast show'+(type?' '+type:'');
+  setTimeout(()=>t.className='toast',2600);
+}
+
+// ─── UTILS ────────────────────────────────
+const el=id=>document.getElementById(id);
+const g=id=>document.getElementById(id)?.value||'';
+const fmt=n=>(n||0).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+const esc=s=>(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+
+// INIT
+renderDB();
+</script>
+</body>
+</html>
